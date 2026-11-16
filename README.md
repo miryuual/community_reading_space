@@ -15,7 +15,7 @@ Sebelum melakukan instalasi, pastikan beberapa persyaratan berikut telah terpenu
 
 ### 1. Unduh Plugin
 
-Unduh repository Community Reading Space melalui GitHub dengan memilih **Code → Download ZIP**.
+Unduh repository Community Reading Space melalui GitHub dengan memilih **FOLDER → A-FULL-PACK_DOWNLOAD HERE**.
 
 Ekstrak file ZIP yang telah diunduh.
 
