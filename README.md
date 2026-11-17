@@ -27,8 +27,6 @@ Struktur folder setelah instalasi:
 
 ```text
 slims/
-├── admin/
-├── lib/
 ├── plugins/
 │   └── community_reading_space/
 │       ├── admin/
