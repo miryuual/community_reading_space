@@ -20,18 +20,12 @@ $crsPage = $_GET['crs_page'] ?? '';
 $allowedPages = [
     'create_topic',
     'detail_topic',
-    'my_discussions'
+    'my_discussions',
+    'community_rules',
+    'trending'
 ];
 
-// Halaman khusus anggota.
-if (in_array($crsPage, $allowedPages, true)) {
-
-    require __DIR__ . '/member/' . $crsPage . '.php';
-
-    return;
-}
-
-// Memeriksa kesiapan tabel CRS.
+// Pastikan skema tersedia sebelum membuka halaman internal.
 if (!crs_tables_ready()) {
 
     page_header('Community Reading Space');
@@ -49,6 +43,42 @@ if (!crs_tables_ready()) {
     page_footer();
 
     return;
+}
+
+// Pastikan tabel fitur (like dan pengaturan) tersedia untuk seluruh halaman CRS.
+crs_ensure_feature_tables();
+
+// Halaman khusus anggota.
+if (in_array($crsPage, $allowedPages, true)) {
+    require __DIR__ . '/member/' . $crsPage . '.php';
+    return;
+}
+
+// Like dari kartu diskusi.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'like_topic') {
+    verify_csrf();
+    $identity = crs_actor_identity();
+    $topicId = (int)($_POST['id_topic'] ?? 0);
+    if (!$identity) {
+        header('Location: ' . rtrim(SWB, '/') . '/index.php?p=member');
+        exit;
+    }
+    $check = crs_db()->prepare('SELECT COUNT(*) FROM crs_topic WHERE id_topic=? AND is_hidden=0');
+    $check->execute([$topicId]);
+    if ($topicId > 0 && $check->fetchColumn()) {
+        $exists = crs_db()->prepare('SELECT id_like FROM crs_topic_like WHERE id_topic=? AND actor_type=? AND actor_id=?');
+        $exists->execute([$topicId, $identity['type'], $identity['id']]);
+        if ($exists->fetchColumn()) {
+            crs_db()->prepare('DELETE FROM crs_topic_like WHERE id_topic=? AND actor_type=? AND actor_id=?')
+                ->execute([$topicId, $identity['type'], $identity['id']]);
+        } else {
+            crs_db()->prepare('INSERT IGNORE INTO crs_topic_like(id_topic,actor_type,actor_id) VALUES(?,?,?)')
+                ->execute([$topicId, $identity['type'], $identity['id']]);
+        }
+    }
+    $returnTo = $_SERVER['REQUEST_URI'] ?? crs_url();
+    header('Location: ' . $returnTo);
+    exit;
 }
 
 // Mengambil parameter pencarian.
@@ -120,13 +150,13 @@ $sql = "
 
         (
             SELECT COUNT(*)
-            FROM crs_vote v
+            FROM crs_topic_like v
             WHERE v.id_topic = t.id_topic
         ) AS vote_count
 
     FROM crs_topic t
 
-    JOIN crs_collection c
+    LEFT JOIN crs_collection c
         ON c.id_collection = t.id_collection
 
     JOIN crs_category cat
@@ -136,12 +166,18 @@ $sql = "
 
     ORDER BY
         t.is_pinned DESC,
+        CASE WHEN ? = 'trending' THEN (
+            (SELECT COUNT(*) FROM crs_topic_like tl WHERE tl.id_topic=t.id_topic) * 2 +
+            (SELECT COUNT(*) FROM crs_reply tr WHERE tr.id_topic=t.id_topic AND tr.is_hidden=0)
+        ) ELSE 0 END DESC,
         t.created_at DESC
 ";
 
 // Menjalankan query.
 $s = crs_db()->prepare($sql);
 
+$sort = ($_GET['sort'] ?? '') === 'trending' ? 'trending' : 'recent';
+$args[] = $sort;
 $s->execute($args);
 
 $topics = $s->fetchAll(PDO::FETCH_ASSOC);
@@ -153,23 +189,20 @@ page_header('Jelajahi Diskusi');
 
 <!-- HERO SECTION -->
 
-<section class="hero">
+<section id="crs-community" class="hero" style="background: <?=e(crs_setting('header_bg_color', '#e8f2fb'))?>">
 
     <div>
 
         <div class="eyebrow">
-            COMMUNITY READING SPACE
+            <?=e(crs_setting('community_name', CRS_APP_NAME))?>
         </div>
 
-        <h1>
-            Setiap bacaan punya cerita.<br>
-            <em>Bagikan dan diskusikan.</em>
+        <h1 class="crs-custom-header-title">
+            <?=nl2br(e(crs_setting('header_title', 'Setiap bacaan punya cerita.\nBagikan dan diskusikan.')))?>
         </h1>
 
         <p>
-            Temukan percakapan seputar koleksi,
-            bertukar pemahaman, dan belajar bersama
-            pemustaka maupun pustakawan.
+            <?=e(crs_setting('header_description', 'Temukan percakapan seputar koleksi, bertukar pemahaman, dan belajar bersama pemustaka maupun pustakawan.'))?>
         </p>
 
     </div>
@@ -249,6 +282,10 @@ page_header('Jelajahi Diskusi');
 
     <?php endif; ?>
 
+    <?php if ($sort === 'trending'): ?>
+        <input type="hidden" name="sort" value="trending">
+    <?php endif; ?>
+
     <button
         type="submit"
         class="btn dark"
@@ -259,9 +296,15 @@ page_header('Jelajahi Diskusi');
 </form>
 
 
+<div class="filter-toolbar">
+<div class="tabs sort-tabs">
+    <a class="<?= $sort !== 'trending' ? 'active' : '' ?>" href="<?=e(crs_url())?><?= $q !== '' ? '&q='.rawurlencode($q) : '' ?>&status=<?=e(rawurlencode($status))?>">Terbaru</a>
+    <a class="<?= $sort === 'trending' ? 'active' : '' ?>" href="<?=e(crs_url())?><?= $q !== '' ? '&q='.rawurlencode($q) : '' ?>&status=<?=e(rawurlencode($status))?>&sort=trending">Trending Topic</a>
+</div>
+
 <!-- FILTER STATUS DISKUSI -->
 
-<div class="tabs">
+<div class="tabs status-tabs">
 
     <?php
 
@@ -283,6 +326,7 @@ page_header('Jelajahi Diskusi');
         }
 
         $filterUrl .= '&status=' . rawurlencode($key);
+        if ($sort === 'trending') $filterUrl .= '&sort=trending';
 
     ?>
 
@@ -295,6 +339,7 @@ page_header('Jelajahi Diskusi');
 
     <?php endforeach; ?>
 
+</div>
 </div>
 
 
@@ -408,33 +453,15 @@ page_header('Jelajahi Diskusi');
 
                 <!-- INFORMASI KOLEKSI -->
 
-                <div class="collection-line">
-
-                    <span class="mini-book">
-                        ▤
-                    </span>
-
-                    <span>
-
-                        <b>
-                            <?= e($t['collection_title']) ?>
-                        </b>
-
-                        <small>
-
-                            <?= e($t['author']) ?>
-
-                            <?php if (!empty($t['publication_year'])): ?>
-
-                                · <?= e($t['publication_year']) ?>
-
-                            <?php endif; ?>
-
-                        </small>
-
-                    </span>
-
-                </div>
+                <?php if (!empty($t['collection_title'])): ?>
+                    <div class="collection-line">
+                        <span class="mini-book">▤</span>
+                        <span>
+                            <b><?= e($t['collection_title']) ?></b>
+                            <small><?= e($t['author'] ?? '') ?><?= !empty($t['publication_year']) ? ' · ' . e($t['publication_year']) : '' ?></small>
+                        </span>
+                    </div>
+                <?php endif; ?>
 
 
                 <!-- INFORMASI TAMBAHAN -->
@@ -454,9 +481,16 @@ page_header('Jelajahi Diskusi');
 
                     </span>
 
-                    <span>
-                        ♡ <?= (int)$t['vote_count'] ?> dukungan
-                    </span>
+                    <?php if (current_user()): ?>
+                        <form method="post" class="card-like-form">
+                            <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
+                            <input type="hidden" name="action" value="like_topic">
+                            <input type="hidden" name="id_topic" value="<?=(int)$t['id_topic']?>">
+                            <button class="text-button" type="submit"><?=crs_topic_liked((int)$t['id_topic'])?'♥ Disukai':'♡ Suka'?> (<?= (int)$t['vote_count'] ?>)</button>
+                        </form>
+                    <?php else: ?>
+                        <span>♥ <?= (int)$t['vote_count'] ?> suka</span>
+                    <?php endif; ?>
 
                     <span>
                         ▤ <?= (int)$t['reply_count'] ?> tanggapan

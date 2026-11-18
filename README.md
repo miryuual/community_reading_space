@@ -1,83 +1,45 @@
-# Instalasi Community Reading Space (CRS)
+# Community Reading Space (CRS) — Versi pengembangan 1.3.2
 
-Community Reading Space (CRS) merupakan plugin SLiMS yang menyediakan ruang diskusi koleksi untuk mempertemukan pemustaka dan pustakawan. Plugin ini terintegrasi dengan katalog SLiMS sehingga pengguna dapat mendiskusikan koleksi yang tersedia melalui halaman OPAC.
+Plugin diskusi komunitas yang terintegrasi dengan OPAC dan administrasi SLiMS.
 
-## Persyaratan Sistem
+## Fitur
+- Menu OPAC dan menu administrasi didaftarkan melalui `SLiMS\Plugins::registerMenu()`.
+- Trending Topic menggunakan skor: jumlah like dikalikan 2 ditambah jumlah tanggapan.
+- Like diskusi per akun (satu like aktif per akun per topik; klik ulang untuk unlike).
+- Koleksi yang dibahas bersifat opsional; kategori diskusi tetap wajib.
+- Community Rules dapat diubah dari dashboard pustakawan.
+- Logo CRS dapat diunggah dari dashboard (PNG, JPG, WebP, maksimal 2 MB).
+- Tampilan CRS menyesuaikan desktop, tablet, dan ponsel.
 
-Sebelum melakukan instalasi, pastikan beberapa persyaratan berikut telah terpenuhi:
+## Instalasi / pembaruan
+1. Backup folder plugin dan database SLiMS.
+2. Salin folder `community_reading_space` ke direktori `plugins` SLiMS.
+3. Aktifkan plugin melalui pengelolaan plugin SLiMS.
+4. Buka menu CRS di administrasi dan jalankan penyiapan tabel jika instalasi baru.
+5. Untuk instalasi CRS lama, buka dashboard pustakawan. Migrasi tambahan `crs_settings`, `crs_topic_like`, dan perubahan kolom koleksi opsional dijalankan otomatis ketika dashboard/OPAC CRS dibuka.
+6. Jalankan sinkronisasi katalog.
 
-- SLiMS Bulian 9.8.0 telah terpasang dan dapat diakses.
-- Pengguna memiliki akses ke folder instalasi SLiMS.
-- Database SLiMS telah dibuat dan dikonfigurasi.
-- Pengguna dapat masuk ke halaman administrasi SLiMS sebagai pustakawan.
-
-## Langkah-Langkah Instalasi
-
-### 1. Unduh Plugin
-
-Unduh repository Community Reading Space melalui GitHub dengan memilih **FOLDER → A-FULL-PACK_DOWNLOAD HERE**.
-
-Ekstrak file ZIP yang telah diunduh.
-
-### 2. Pindahkan Folder Plugin
-
-Salin folder `community_reading_space` ke dalam direktori `plugins` pada instalasi SLiMS.
-
-Struktur folder setelah instalasi:
-
-```text
-slims/
-├── plugins/
-│   └── community_reading_space/
-│       ├── admin/
-│       ├── assets/
-│       ├── includes/
-│       ├── member/
-│       ├── sql/
-│       ├── community_reading_space.plugin.php
-│       ├── config.php
-│       ├── index.php
-│       └── README.md
-├── sysconfig.inc.php
-└── index.php
-```
-
-Pastikan file `community_reading_space.plugin.php` berada langsung di dalam folder `community_reading_space`, bukan di dalam folder tambahan hasil ekstraksi ZIP.
-
-### 3. Aktifkan Plugin
-
-1. Buka website SLiMS melalui browser.
-2. Masuk ke halaman administrasi menggunakan akun pustakawan.
-3. Buka menu **System → Plugins**.
-4. Temukan Community Reading Space.
-5. Aktifkan plugin melalui pengaturan plugin SLiMS.
-
-### 4. Konfigurasi Awal
-
-Setelah plugin aktif, buka menu administrasi **System → Community Reading Space**.
-
-Lakukan konfigurasi awal sesuai fitur yang tersedia, termasuk pembuatan tabel tambahan CRS dan sinkronisasi data katalog SLiMS jika diperlukan.
-
-Pastikan proses konfigurasi berhasil sebelum menggunakan fitur diskusi.
-
-### 5. Akses Community Reading Space
-
-Setelah plugin berhasil diaktifkan, pemustaka dapat mengakses Community Reading Space melalui halaman OPAC SLiMS.
-
-Alamat akses:
-
-```text
-http://localhost/nama_folder_slims/index.php?p=community_reading_space
-```
-
-Ganti `nama_folder_slims` dengan nama folder instalasi SLiMS yang digunakan.
-
-Pemustaka dapat menggunakan halaman CRS untuk menjelajahi diskusi koleksi dan berinteraksi dengan pengguna lain sesuai fitur yang tersedia.
+## Navigasi
+Menu OPAC dan menu administrasi didaftarkan oleh `community_reading_space.plugin.php` menggunakan API resmi `registerMenu()`. Pastikan plugin aktif dan muat ulang halaman SLiMS. Tidak perlu menyunting template tema OPAC.
 
 ## Catatan
+- Jangan menghapus tabel `crs_` saat memperbarui plugin.
+- Jangan menjalankan ulang `install.sql` pada database produksi yang sudah berisi data.
+- Backup database sebelum pembaruan.
+- Upload logo disimpan pada `assets/uploads/`.
+- Uji pada salinan/staging SLiMS terlebih dahulu. Paket ini telah diperiksa sintaks PHP-nya, tetapi tetap perlu diuji pada versi SLiMS dan database lokal yang digunakan.
 
-- Lakukan pencadangan database dan folder SLiMS sebelum memasang plugin.
-- Jangan mengubah nama folder utama plugin karena dapat memengaruhi pemanggilan file.
-- Pastikan plugin telah diaktifkan melalui administrasi SLiMS sebelum mengakses halaman CRS.
-- Jika halaman CRS tidak dapat dibuka, periksa kembali struktur folder, konfigurasi plugin, dan pesan kesalahan PHP.
-- Menu administrasi CRS digunakan untuk pengelolaan oleh pustakawan, sedangkan halaman OPAC digunakan sebagai antarmuka pemustaka.
+
+## Pembaruan 1.3.2
+- Menambahkan tautan Community Reading Space pada navigasi utama OPAC melalui hook `after_content_load`.
+- Menambahkan halaman Trending Topic tersendiri melalui `?p=community_reading_space&crs_page=trending`.
+- Mengurutkan Trending Topic berdasarkan skor interaksi: 2 poin per like dan 1 poin per tanggapan.
+- Menyatukan filter urutan dan status dalam satu baris dengan scroll horizontal pada layar kecil.
+
+
+## Pembaruan 1.3.2
+- Menambahkan opsi aktif/nonaktif navigasi CRS pada dashboard pustakawan.
+- Menempatkan tautan CRS pada navigasi global OPAC sebelum pilihan bahasa jika elemen bahasa dikenali.
+- Menambahkan pengaturan nama komunitas, tagline, judul/deskripsi header, dan warna header.
+- Menghilangkan tombol sinkronisasi katalog setelah sinkronisasi pertama selesai; status lama dimigrasikan dari jumlah koleksi yang sudah ada.
+- Menyegarkan tampilan dashboard pustakawan agar lebih terstruktur dan responsif.

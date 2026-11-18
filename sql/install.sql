@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS crs_category (
 
 CREATE TABLE IF NOT EXISTS crs_topic (
  id_topic INT AUTO_INCREMENT PRIMARY KEY,
- id_collection INT NOT NULL,
+ id_collection INT NULL,
  id_category INT NOT NULL,
  member_id VARCHAR(40) NULL,
  user_id INT NULL,
