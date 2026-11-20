@@ -1,4 +1,4 @@
-# Community Reading Space (CRS) — Versi pengembangan 1.3.2
+# Community Reading Space (CRS)
 
 Plugin diskusi komunitas yang terintegrasi dengan OPAC dan administrasi SLiMS.
 
