@@ -1,4 +1,3 @@
-
 <?php
 
 /**
@@ -224,7 +223,6 @@ page_header('Jelajahi Diskusi');
 
 </section>
 
-
 <!-- JUDUL DAN TOMBOL DISKUSI -->
 
 <div class="section-head">
@@ -249,7 +247,6 @@ page_header('Jelajahi Diskusi');
     </a>
 
 </div>
-
 
 <!-- FORM PENCARIAN -->
 
@@ -296,7 +293,6 @@ page_header('Jelajahi Diskusi');
 
 </form>
 
-
 <div class="filter-toolbar">
 <div class="tabs sort-tabs">
     <a class="<?= $sort !== 'trending' ? 'active' : '' ?>" href="<?=e(crs_url())?><?= $q !== '' ? '&q='.rawurlencode($q) : '' ?>&status=<?=e(rawurlencode($status))?>">Terbaru</a>
@@ -342,7 +338,6 @@ page_header('Jelajahi Diskusi');
 
 </div>
 </div>
-
 
 <!-- DAFTAR DISKUSI -->
 
@@ -419,7 +414,6 @@ page_header('Jelajahi Diskusi');
 
                 </div>
 
-
                 <!-- JUDUL DISKUSI -->
 
                 <h3>
@@ -434,7 +428,6 @@ page_header('Jelajahi Diskusi');
                     </a>
 
                 </h3>
-
 
                 <!-- RINGKASAN DISKUSI -->
 
@@ -451,7 +444,6 @@ page_header('Jelajahi Diskusi');
 
                 </p>
 
-
                 <!-- INFORMASI KOLEKSI -->
 
                 <?php if (!empty($t['collection_title'])): ?>
@@ -463,7 +455,6 @@ page_header('Jelajahi Diskusi');
                         </span>
                     </div>
                 <?php endif; ?>
-
 
                 <!-- INFORMASI TAMBAHAN -->
 
@@ -515,7 +506,6 @@ page_header('Jelajahi Diskusi');
     </div>
 
 <?php endif; ?>
-
 
 <?php
 
