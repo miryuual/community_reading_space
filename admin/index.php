@@ -205,18 +205,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $communityTagline = trim((string)($_POST['community_tagline'] ?? ''));
                 $headerTitle = trim((string)($_POST['header_title'] ?? ''));
                 $headerDescription = trim((string)($_POST['header_description'] ?? ''));
-                $headerColor = trim((string)($_POST['header_bg_color'] ?? '#e8f2fb'));
+                $headerColor = '#e8f2fb';
                 $navEnabled = isset($_POST['opac_nav_enabled']) ? '1' : '0';
 
                 if ($communityName === '') throw new RuntimeException('Nama komunitas tidak boleh kosong.');
-                if (!preg_match('/^#[0-9a-fA-F]{6}$/', $headerColor)) throw new RuntimeException('Warna header harus berupa kode HEX, contoh #e8f2fb.');
 
                 $settings = [
                     'community_name' => $communityName,
                     'community_tagline' => $communityTagline,
                     'header_title' => $headerTitle,
                     'header_description' => $headerDescription,
-                    'header_bg_color' => $headerColor,
                     'opac_nav_enabled' => $navEnabled
                 ];
                 $save = crs_db()->prepare("INSERT INTO crs_settings(setting_key,setting_value) VALUES(?,?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)");
@@ -257,6 +255,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($oldPath && $basePath && strpos($oldPath, $basePath . DIRECTORY_SEPARATOR) === 0) @unlink($oldPath);
                 }
                 crs_db()->prepare("DELETE FROM crs_settings WHERE setting_key='logo_path'")->execute();
+            } elseif ($action === 'upload_header') {
+                if (empty($_FILES['crs_header_image']) || $_FILES['crs_header_image']['error'] !== UPLOAD_ERR_OK) throw new RuntimeException('Pilih gambar header yang valid.');
+                if ($_FILES['crs_header_image']['size'] > 5 * 1024 * 1024) throw new RuntimeException('Ukuran gambar header maksimal 5 MB.');
+                $imageInfo = @getimagesize($_FILES['crs_header_image']['tmp_name']);
+                $mime = $imageInfo['mime'] ?? '';
+                $allowed = ['image/png'=>'png','image/jpeg'=>'jpg','image/webp'=>'webp'];
+                if (!isset($allowed[$mime])) throw new RuntimeException('Format header harus PNG, JPG, atau WebP.');
+                $uploadDir = __DIR__ . '/../assets/uploads';
+                if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) throw new RuntimeException('Folder upload tidak dapat dibuat.');
+                $filename = 'crs-header.' . $allowed[$mime];
+                if (!move_uploaded_file($_FILES['crs_header_image']['tmp_name'], $uploadDir . '/' . $filename)) throw new RuntimeException('Gambar header gagal disimpan.');
+                $relative = 'assets/uploads/' . $filename;
+                crs_db()->prepare("INSERT INTO crs_settings(setting_key,setting_value) VALUES('header_image_path',?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)")->execute([$relative]);
+            } elseif ($action === 'remove_header') {
+                $old = crs_setting('header_image_path');
+                if ($old && strpos($old, 'assets/uploads/crs-header.') === 0) { $path = realpath(__DIR__ . '/../' . $old); $dir = realpath(__DIR__ . '/../assets/uploads'); if ($path && $dir && strpos($path, $dir . DIRECTORY_SEPARATOR) === 0) @unlink($path); }
+                crs_db()->prepare("DELETE FROM crs_settings WHERE setting_key='header_image_path'")->execute();
             } elseif ($action === 'report_status') {
 
                 $reportId = (int) ($_POST['id_report'] ?? 0);
@@ -411,10 +426,7 @@ $reports = crs_db()->query(
 crs_admin_header('Panel Pustakawan');
 ?>
 
-<div class="eyebrow">PENGELOLAAN KOMUNITAS</div>
-<p class="muted">
-    Pantau aktivitas, kelola diskusi, dan tindak lanjuti laporan konten.
-</p>
+<div class="crs-admin-topline"><div class="crs-management-title">Community management</div><a class="btn outline crs-home-link" href="<?=e(CRS_OPAC_URL)?>" target="_blank" rel="noopener">Beranda CRS</a></div>
 
 <?php
 $catalogSynced = crs_setting('catalog_synced', '0') === '1';
@@ -423,31 +435,11 @@ if (!in_array($activeTab, ['settings', 'discussions', 'reports'], true)) $active
 $tabUrl = $crs_action_base_url . '&crs_tab=';
 ?>
 <nav class="crs-admin-tabs" aria-label="Navigasi pengelolaan CRS">
-    <a class="<?= $activeTab === 'settings' ? 'active' : '' ?>" href="<?=e($tabUrl . 'settings')?>">Pengaturan Komunitas</a>
     <a class="<?= $activeTab === 'discussions' ? 'active' : '' ?>" href="<?=e($tabUrl . 'discussions')?>">Kelola Diskusi</a>
     <a class="<?= $activeTab === 'reports' ? 'active' : '' ?>" href="<?=e($tabUrl . 'reports')?>">Laporan Diskusi <span><?= (int)$stats['reports'] ?></span></a>
+    <a class="<?= $activeTab === 'settings' ? 'active' : '' ?>" href="<?=e($tabUrl . 'settings')?>">Pengaturan Komunitas</a>
 </nav>
 <?php if ($activeTab === 'discussions'): ?>
-<div class="admin-welcome-card">
-    <div>
-        <span class="eyebrow">KONEKSI SLiMS</span>
-        <h2>Katalog bibliografi</h2>
-        <p class="muted"><?= $catalogSynced ? 'Katalog sudah tersinkronisasi dan siap digunakan CRS.' : 'Katalog belum disinkronisasikan. Jalankan sinkronisasi awal untuk mengimpor koleksi.' ?></p>
-        <?php if ($catalogSynced): ?>
-            <span class="status answered">✓ Sinkronisasi selesai</span>
-        <?php endif; ?>
-    </div>
-    <div class="admin-welcome-actions">
-        <?php if (!$catalogSynced): ?>
-            <form method="post" action="<?=e($crs_action_url)?>">
-                <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
-                <input type="hidden" name="crs_action" value="sync">
-                <button class="btn outline" type="submit">Sinkronkan Katalog Sekarang</button>
-            </form>
-        <?php endif; ?>
-        <a class="btn primary" href="<?=e(CRS_OPAC_URL)?>#crs-community" target="_blank" rel="noopener">Buka Halaman Community</a>
-    </div>
-</div>
 
 <div class="stats-grid">
 
@@ -680,6 +672,14 @@ $tabUrl = $crs_action_base_url . '&crs_tab=';
 <?php endif; ?>
 <?php if ($activeTab === 'settings'): ?>
 <div class="section-head"><h2>Pengaturan komunitas</h2></div>
+<section class="form-card settings-full catalog-settings-card">
+    <h3>Katalog Bibliografi</h3>
+    <p class="muted"><?= $catalogSynced ? 'Katalog sudah tersinkronisasi.' : 'Katalog belum tersinkronisasi.' ?></p>
+    <?php if ($catalogSynced): ?><span class="status answered">Sinkronisasi selesai</span><?php endif; ?>
+    <?php if (!$catalogSynced): ?>
+    <form method="post" action="<?=e($crs_action_url)?>"><input type="hidden" name="csrf" value="<?=e(csrf_token())?>"><input type="hidden" name="crs_action" value="sync"><button class="btn outline" type="submit">Sinkronkan Katalog</button></form>
+    <?php endif; ?>
+</section>
 <div class="settings-grid">
     <section class="form-card">
         <h3>Logo Community Reading Space</h3>
@@ -703,7 +703,7 @@ $tabUrl = $crs_action_base_url . '&crs_tab=';
 
     <section class="form-card">
         <h3>Community Rules</h3>
-        <p class="muted">Atur pedoman yang akan tampil pada halaman komunitas.</p>
+        
         <form method="post" action="<?=e($crs_action_url)?>">
             <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
             <input type="hidden" name="action" value="save_rules">
@@ -716,7 +716,15 @@ $tabUrl = $crs_action_base_url . '&crs_tab=';
 
 <section class="form-card settings-full">
     <h3>Identitas dan header komunitas</h3>
-    <p class="muted">Atur nama komunitas dan teks pada header halaman utama CRS.</p>
+    
+    <?php $headerImage = crs_setting('header_image_path'); ?>
+    <?php if ($headerImage): ?><img class="admin-header-preview" src="<?=e(CRS_PLUGIN_URL . $headerImage)?>" alt="Preview header komunitas"><?php endif; ?>
+    <form method="post" enctype="multipart/form-data" action="<?=e($crs_action_url)?>" class="header-upload-form">
+        <input type="hidden" name="csrf" value="<?=e(csrf_token())?>"><input type="hidden" name="action" value="upload_header">
+        <label for="crs_header_image">Gambar header (PNG, JPG, WebP; maksimal 5 MB)</label><input id="crs_header_image" name="crs_header_image" type="file" accept="image/png,image/jpeg,image/webp" required><img id="crs-header-live-preview" class="admin-header-preview" alt="Preview gambar yang dipilih" hidden>
+        <button class="btn outline" type="submit">Unggah Header</button>
+    </form>
+    <?php if ($headerImage): ?><form method="post" action="<?=e($crs_action_url)?>"><input type="hidden" name="csrf" value="<?=e(csrf_token())?>"><input type="hidden" name="action" value="remove_header"><button class="btn outline" type="submit">Kembalikan Header Default</button></form><?php endif; ?>
     <form method="post" action="<?=e($crs_action_url)?>" class="crs-settings-form">
         <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
         <input type="hidden" name="action" value="save_general_settings">
@@ -728,8 +736,6 @@ $tabUrl = $crs_action_base_url . '&crs_tab=';
         <textarea id="header_title" name="header_title" rows="2"><?=e(crs_setting('header_title', "Setiap bacaan punya cerita.\nBagikan dan diskusikan."))?></textarea>
         <label for="header_description">Deskripsi header OPAC</label>
         <textarea id="header_description" name="header_description" rows="3"><?=e(crs_setting('header_description', 'Temukan percakapan seputar koleksi, bertukar pemahaman, dan belajar bersama pemustaka maupun pustakawan.'))?></textarea>
-        <label for="header_bg_color">Warna latar header (HEX)</label>
-        <input id="header_bg_color" name="header_bg_color" type="color" value="<?=e(crs_setting('header_bg_color', '#e8f2fb'))?>">
         <div class="nav-setting-row">
             <div>
                 <b>Navigasi CRS pada OPAC SLiMS</b>

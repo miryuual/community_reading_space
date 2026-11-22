@@ -172,10 +172,8 @@ function crs_admin_header(string $title): void
     echo '<link rel="stylesheet" href="' . e(CRS_PLUGIN_URL) . 'assets/css/style.css">';
     echo '<div class="crs-admin-wrap">';
     show_flash();
-    $logo = crs_setting('logo_path');
-    if ($logo !== '') echo '<img class="admin-crs-logo" src="' . e(CRS_PLUGIN_URL . $logo) . '" alt="Logo CRS">';
-    echo '<div class="eyebrow">COMMUNITY READING SPACE</div>';
-    echo '<h1>' . e($title) . '</h1>';
+    // Panel pengelolaan menggunakan judul tunggal yang lebih ringkas.
+    // Hapus label dan heading generik yang berulang pada area admin.
 }
 
 function crs_admin_footer(): void

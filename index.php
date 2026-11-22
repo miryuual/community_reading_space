@@ -189,7 +189,8 @@ page_header('Jelajahi Diskusi');
 
 <!-- HERO SECTION -->
 
-<section id="crs-community" class="hero" style="background: <?=e(crs_setting('header_bg_color', '#e8f2fb'))?>">
+<?php $crsHeaderImage = crs_setting('header_image_path'); ?>
+<section id="crs-community" class="hero" style="<?= $crsHeaderImage ? 'background-image:linear-gradient(90deg,rgba(255,255,255,.94),rgba(255,255,255,.78)),url(' . e(CRS_PLUGIN_URL . $crsHeaderImage) . ');background-size:cover;background-position:center;' : 'background:#f4f6f8;' ?>">
 
     <div>
 

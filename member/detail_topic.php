@@ -12,8 +12,8 @@ $s->execute([$id]);
 $topic = $s->fetch(PDO::FETCH_ASSOC);
 
 if (!$topic || ($topic['is_hidden'] && !is_staff())) {
-    http_response_code(404);
-    exit('Diskusi tidak ditemukan.');
+    header('Location: ' . crs_url());
+    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -1,4 +1,4 @@
-# Community Reading Space (CRS)
+# Community Reading Space (CRS) — Versi pengembangan 1.3.2
 
 Plugin diskusi komunitas yang terintegrasi dengan OPAC dan administrasi SLiMS.
 
@@ -43,3 +43,10 @@ Menu OPAC dan menu administrasi didaftarkan oleh `community_reading_space.plugin
 - Menambahkan pengaturan nama komunitas, tagline, judul/deskripsi header, dan warna header.
 - Menghilangkan tombol sinkronisasi katalog setelah sinkronisasi pertama selesai; status lama dimigrasikan dari jumlah koleksi yang sudah ada.
 - Menyegarkan tampilan dashboard pustakawan agar lebih terstruktur dan responsif.
+
+## Pembaruan panel pengelolaan (UI)
+- Menyembunyikan tombol sinkronisasi katalog setelah sinkronisasi selesai.
+- Memindahkan tab Pengaturan Komunitas setelah Laporan Diskusi.
+- Menyederhanakan identitas panel pustakawan menjadi `Community management`.
+- Menghilangkan label `COMMUNITY READING SPACE`, heading `Panel Pustakawan`, dan logo CRS pada panel admin.
+- Memperhalus spacing, typography, tombol, tab, tabel, dan responsivitas halaman CRS.
