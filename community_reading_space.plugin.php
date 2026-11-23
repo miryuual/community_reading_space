@@ -3,7 +3,7 @@
  * Plugin Name: Community Reading Space
  * Plugin URI: https://github.com/miryuual/community_reading_space/releases
  * Description: Ruang diskusi koleksi yang terintegrasi dengan OPAC dan administrasi SLiMS.
- * Version: 1.2.0
+ * Version: 1.2.2
  * Author: Community Reading Space
  * Author URI: https://github.com/miryuual/community_reading_space/releases
  */

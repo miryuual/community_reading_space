@@ -375,9 +375,25 @@ function crs_topic_like_count(int $topicId): int
 function crs_tables_ready(): bool
 {
     try {
-        return (bool) crs_db()->query(
-            "SHOW TABLES LIKE 'crs_topic'"
-        )->fetchColumn();
+        $pdo = crs_db();
+        $requiredTables = [
+            'crs_collection',
+            'crs_category',
+            'crs_topic',
+            'crs_reply',
+            'crs_vote',
+            'crs_report',
+        ];
+
+        foreach ($requiredTables as $table) {
+            $check = $pdo->prepare('SHOW TABLES LIKE ?');
+            $check->execute([$table]);
+            if (!$check->fetchColumn()) {
+                return false;
+            }
+        }
+
+        return true;
     } catch (Throwable $e) {
         return false;
     }

@@ -66,7 +66,7 @@ function require_staff(): void
 // Login tetap dikelola oleh SLiMS.
 function login_user(array $u): void
 {
-    // Tidak menggunakan login terpisah.
+
 }
 
 // Logout tetap dikelola oleh SLiMS.

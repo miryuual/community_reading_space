@@ -10,10 +10,6 @@ if (!defined('INDEX_AUTH')) {
 
 }
 
-// Plugin menu SLiMS dimuat melalui plugin_container.php.
-
-// Mulai sesi admin agar identitas pustakawan dapat dibaca.
-
 if (!defined('SB')) {
 
     http_response_code(500);
@@ -30,9 +26,6 @@ require_once __DIR__ . '/../includes/functions.php';
 
 require_staff();
 
-// Endpoint resmi menu plugin SLiMS. ID harus sama dengan md5(realpath(path))
-
-// yang dibuat oleh Plugins::registerMenu().
 
 $crs_plugin_id = md5(realpath(__FILE__));
 
@@ -66,20 +59,18 @@ function crs_install_tables(): void
 
     }
 
-    // Memisahkan perintah SQL berdasarkan titik koma di akhir baris.
-
-    $statements = preg_split('/;**\s***(?:**\r\n**|**\r**|**\n**|$)/', trim($sql));
+    // File install.sql berisi perintah SQL sederhana yang dipisahkan titik koma.
+    // Regex versi sebelumnya tidak valid dan membuat proses setup gagal sebelum
+    // tabel CRS dibuat.
+    $statements = explode(';', $sql);
+    $pdo = crs_db();
 
     foreach ($statements as $statement) {
-
         $statement = trim($statement);
 
         if ($statement !== '') {
-
-            crs_db()->exec($statement);
-
+            $pdo->exec($statement);
         }
-
     }
 
 }
@@ -96,9 +87,6 @@ function crs_sync_catalog(): int
 
     $pdo = crs_db();
 
-    // SLiMS menyimpan pengarang pada tabel relasi biblio_author dan
-
-    // mst_author, bukan pada kolom biblio.author.
 
     $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
 
@@ -223,8 +211,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'setup') {
 
             crs_install_tables();
-
-            crs_ensure_feature_tables();
 
             crs_ensure_feature_tables();
 
