@@ -1,4 +1,4 @@
-# Community Reading Space (CRS) — Versi pengembangan 1.3.2
+# Community Reading Space (CRS) — Versi pengembangan 2.0.0
 
 Plugin diskusi komunitas yang terintegrasi dengan OPAC dan administrasi SLiMS.
 
@@ -30,14 +30,14 @@ Menu OPAC dan menu administrasi didaftarkan oleh `community_reading_space.plugin
 - Uji pada salinan/staging SLiMS terlebih dahulu. Paket ini telah diperiksa sintaks PHP-nya, tetapi tetap perlu diuji pada versi SLiMS dan database lokal yang digunakan.
 
 
-## Pembaruan 1.3.2
+## Pembaruan 2.0.0
 - Menambahkan tautan Community Reading Space pada navigasi utama OPAC melalui hook `after_content_load`.
 - Menambahkan halaman Trending Topic tersendiri melalui `?p=community_reading_space&crs_page=trending`.
 - Mengurutkan Trending Topic berdasarkan skor interaksi: 2 poin per like dan 1 poin per tanggapan.
 - Menyatukan filter urutan dan status dalam satu baris dengan scroll horizontal pada layar kecil.
 
 
-## Pembaruan 1.3.2
+## Pembaruan 2.0.0
 - Menambahkan opsi aktif/nonaktif navigasi CRS pada dashboard pustakawan.
 - Menempatkan tautan CRS pada navigasi global OPAC sebelum pilihan bahasa jika elemen bahasa dikenali.
 - Menambahkan pengaturan nama komunitas, tagline, judul/deskripsi header, dan warna header.
